@@ -326,6 +326,116 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
 - How many notes are returned in the worst case?
 - Why shouldn't we use scan operations here?
 
+## Unit tests
+
+In this section we are going to add some unit tests for the Lambda functions.
+
+1. Delete the test file created by CDK: `rm test/cdk-hello-world.test.ts`
+1. Create a new folder: `mkdir test/src`
+1. Create a new file: `touch test/src/listNotes.test.ts`:
+
+   ```typescript
+   const scanSpy = jest.fn();
+   jest.mock("aws-sdk", () => ({
+     DynamoDB: {
+       DocumentClient: jest.fn(() => ({
+         scan: scanSpy,
+       })),
+     },
+   }));
+
+   import { handler } from "../../src/listNotes";
+
+   beforeAll(() => {
+     process.env.TABLE_NAME = "foo";
+   });
+
+   afterEach(() => {
+     jest.resetAllMocks();
+   });
+
+   it("should return notes", async () => {
+     const item = {
+       id: "2021-04-12T18:55:06.295Z",
+       title: "Hello World",
+       content: "Minim nulla dolore nostrud dolor aliquip minim.",
+     };
+
+     scanSpy.mockImplementation(() => ({
+       promise() {
+         return Promise.resolve({ Items: [item] });
+       },
+     }));
+
+     const response = await handler();
+
+     expect(response).toEqual({
+       statusCode: 200,
+       body: JSON.stringify([item]),
+     });
+   });
+   ```
+
+1. Create a new file: `touch test/src/putNotes.test.ts`:
+
+   ```typescript
+   const putSpy = jest.fn();
+   jest.mock("aws-sdk", () => ({
+     DynamoDB: {
+       DocumentClient: jest.fn(() => ({
+         put: putSpy,
+       })),
+     },
+   }));
+
+   import { APIGatewayProxyEvent } from "aws-lambda";
+   import { handler } from "../../src/putNote";
+
+   beforeAll(() => {
+     process.env.TABLE_NAME = "foo";
+   });
+
+   afterEach(() => {
+     jest.resetAllMocks();
+   });
+
+   describe("valid request", () => {
+     it("should return status code 201", async () => {
+       const requestBody = {
+         title: "Hello World",
+         content: "Minim nulla dolore nostrud dolor aliquip minim.",
+       };
+
+       putSpy.mockImplementation(() => ({
+         promise() {
+           return Promise.resolve();
+         },
+       }));
+
+       const event = {
+         body: JSON.stringify(requestBody),
+       } as APIGatewayProxyEvent;
+       const response = await handler(event);
+
+       expect(response).toEqual({
+         statusCode: 201,
+       });
+     });
+   });
+
+   describe("invalid request body", () => {
+     it("should return status code 400", async () => {
+       const response = await handler({} as APIGatewayProxyEvent);
+
+       expect(response).toEqual({
+         statusCode: 400,
+       });
+     });
+   });
+   ```
+
+1. Run the tests: `npm test`
+
 ## Further questions
 
 - What is the request limit of our API?
