@@ -8,13 +8,13 @@
 
 ### Bootstrap
 
-Let's get started by creating a completely new CDK stack.
+Start with creating a completely new CDK stack:
 
 1. Create a new folder: `mkdir cdk-hello-world`
 1. Jump into the folder: `cd cdk-hello-world`
-1. Init a CDK project: `npx cdk init app --language typescript`
+1. Initialize a CDK project: `npx cdk init app --language typescript`
 1. Update CDK to latest version: `npm i @aws-cdk/core@latest @aws-cdk/assert@latest aws-cdk@latest`
-1. Go to the file `bin/cdk-hello-world.ts` and add a prefix or suffix to the stack, e.g.:
+1. Go to the file `bin/cdk-hello-world.ts` and add a prefix or suffix to the CloudFormation stack name, e.g.:
 
    ```typescript
    #!/usr/bin/env node
@@ -23,30 +23,30 @@ Let's get started by creating a completely new CDK stack.
    import { CdkHelloWorldStack } from "../lib/cdk-hello-world-stack";
 
    const app = new cdk.App();
-   new CdkHelloWorldStack(app, "CdkHelloWorldStackHenrik");
+   new CdkHelloWorldStack(app, "CdkHelloWorldStack-Henrik");
    ```
 
-1. Deploy stack: `npx cdk deploy`
+1. Deploy the CloudFormation stack: `npx cdk deploy`
 
 **Questions:**
 
-- Why did we add a prefix or suffix to the stack?
-- What did we actually deploy?
+- What's the reason for adding a prefix to the stack name?
+- What's happening when you run the `npx cdk deploy` command?
 
 ### The first lambda function
 
-Cool, we have a CDK stack now. Next step is our first Lambda function:
+Cool, we have a CDK stack now. The next step contains our first Lambda function:
 
-1. Create a new `src` folder: `mkdir src`
-1. Create a new file: `touch src/putNote.ts`
-1. Go to the file and add the following code:
+1. Create a new `src` folder: `mkdir ./src`
+1. Create a new file: `touch ./src/putNote.ts`
+1. Add following code to the created file:
    ```typescript
    export const handler = async () => {
      console.log("Hello World :)");
    };
    ```
-1. Before we can describe the infrastructure, we need a new NPM package: `npm i @aws-cdk/aws-lambda-nodejs esbuild@0`
-1. Next, update the file `lib/cdk-hello-world-stack.ts`:
+1. Before you can create the next infrastructure components, you need to install a new NPM package: `npm i @aws-cdk/aws-lambda-nodejs esbuild@0`
+1. Next, update the file `./lib/cdk-hello-world-stack.ts`:
 
    ```typescript
    import * as cdk from "@aws-cdk/core";
@@ -68,16 +68,16 @@ Cool, we have a CDK stack now. Next step is our first Lambda function:
 
 **Questions:**
 
-- What resources did we create and why?
-- How can you execute the Lambda function?
-- How can you see the log output from the Lambda function?
+- What resources did you create and why?
+- How can you execute the AWS Lambda function?
+- How can you see the log output from the AWS Lambda function?
 
 ### API Gateway
 
-In this section we want to create a simple HTTP API to invoke the Lambda function:
+In this section you need to create a basic HTTP API to invoke the AWS Lambda function:
 
-1. Install the NPM package for API Gateway: `npm i @aws-cdk/aws-apigatewayv2 @aws-cdk/aws-apigatewayv2-integrations`
-1. Update `lib/cdk-hello-world-stack.ts`:
+1. Install the NPM package for creating an API Gateway with CDK: `npm i @aws-cdk/aws-apigatewayv2 @aws-cdk/aws-apigatewayv2-integrations`
+1. Update `./lib/cdk-hello-world-stack.ts`:
 
    ```typescript
    import * as cdk from "@aws-cdk/core";
@@ -113,7 +113,7 @@ In this section we want to create a simple HTTP API to invoke the Lambda functio
    }
    ```
 
-1. Update the Lambda function, so `src/putNote.ts`:
+1. Update the AWS Lambda function, so `./src/putNote.ts`:
 
    ```typescript
    export const handler = async () => {
@@ -127,21 +127,21 @@ In this section we want to create a simple HTTP API to invoke the Lambda functio
    ```
 
 1. Deploy: `npx cdk deploy`
-1. Copy the endpoint URL from the output of the deployment and run the following request: `curl -X POST https://XXXXX.execute-api.eu-central-1.amazonaws.com/notes`
+1. Copy the endpoint URL from the output of the deployment and run the following request to send a HTTP request: `curl -X POST https://XXXXX.execute-api.eu-central-1.amazonaws.com/notes`
 
 **Questions:**
 
-- What is a CloudFormation output and where do I find it?
-- How does the integration between API Gateway and Lambda work?
-- What happens if I try to access routes I didn't configure?
+- What is a stack's output and where do you find it?
+- How does the integration of API Gateway and AWS Lambda work?
+- What happens if you try to access routes you did not configure?
 
 ### DynamoDB
 
-We have an API and a lambda function. Pretty cool, now let's create a database and persist something:
+You have an Amazon API Gateway and an AWS Lambda function. Pretty cool! Now, create a DynamoDB table to persist data:
 
-1. As always, new dependencies: `npm i @aws-cdk/aws-dynamodb`
-1. Plus more dependencies for our local setup: `npm i --save-dev aws-sdk @types/aws-lambda`
-1. Extend our stack:
+1. As always, add the needed dependencies: `npm i @aws-cdk/aws-dynamodb`
+1. Plus, more dependencies for the local environment: `npm i --save-dev aws-sdk @types/aws-lambda`
+1. Extend your CDK stack:
 
    ```typescript
    import * as cdk from "@aws-cdk/core";
@@ -187,7 +187,7 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
    }
    ```
 
-1. Update the lambda function:
+1. Update the AWS Lambda function:
 
    ```typescript
    import * as AWS from "aws-sdk";
@@ -219,15 +219,15 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
    };
    ```
 
-1. Deploy latest changes: `npx cdk deploy`
-1. Run with your endpoint url: `curl -X POST https://XXXXXX.execute-api.eu-central-1.amazonaws.com/notes --data '{ "title": "Hello World", "content": "abc" }' -H 'Content-Type: application/json' -i`
-1. Ideally, the first item should have been stored in the database.
+1. Deploy the latest changes: `npx cdk deploy`
+1. Send a HTTP request with your endpoint url: `curl -X POST https://XXXXXX.execute-api.eu-central-1.amazonaws.com/notes --data '{ "title": "Hello World", "content": "abc" }' -H 'Content-Type: application/json' -i`
+1. Ideally, your first note is stored in the DynamoDB table! 🎉
 
 **Questions:**
 
-- Where can I find the environment variables of the Lambda function in the AWS console?
-- What does the line `notesTable.grantReadWriteData(putNote)` do?
-- Why do we just define the partition key for the table, but not the whole schema with the fields `title` and `content`?
+- Where do you see the environment variables of the AWS Lambda function using the AWS Management Console?
+- What does the line `notesTable.grant(putNote, "dynamodb:PutItem");` do?
+- Why did you define the partition key for the DynamoDB table, but not the whole schema including the fields `title` and `content`?
 - What is the maximum size of a note's content?
 
 ### Fetch list of notes
@@ -324,15 +324,15 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
 **Questions:**
 
 - How many notes are returned in the worst case?
-- Why shouldn't we use scan operations here?
+- Why shouldn't you use `scan` operations here?
 
 ## Unit tests
 
-In this section we are going to add some unit tests for the Lambda functions.
+In this section you are going to add some unit tests for the AWS Lambda functions.
 
-1. Delete the test file created by CDK: `rm test/cdk-hello-world.test.ts`
-1. Create a new folder: `mkdir test/src`
-1. Create a new file: `touch test/src/listNotes.test.ts`:
+1. Delete the test file created by CDK: `rm ./test/cdk-hello-world.test.ts`
+1. Create a new folder: `mkdir ./test/src`
+1. Create a new file: `touch ./test/src/listNotes.test.ts`:
 
    ```typescript
    const scanSpy = jest.fn();
@@ -438,9 +438,9 @@ In this section we are going to add some unit tests for the Lambda functions.
 
 ## Integration tests
 
-1. Install some dependencies: `npm i node-fetch @types/node-fetch --save-dev`
-1. Create a new folder: `mkdir integration`
-1. Create a new file: `touch integration/api.test.ts`:
+1. Install the needed dependencies: `npm i node-fetch @types/node-fetch --save-dev`
+1. Create a new folder: `mkdir ./integration`
+1. Create a new file: `touch ./integration/api.test.ts`:
 
    ```typescript
    import fetch from "node-fetch";
@@ -496,13 +496,12 @@ In this section we are going to add some unit tests for the Lambda functions.
 
 **Questions:**
 
-- How could you improve the integration tests to further check the integrity of the API?
-- How could you use the integration tests?
+- How can you improve the integration tests to further check the integrity of the API?
 
 ## Further questions
 
-- What is the request limit of our API?
-- What are the costs per month for the provisioned infrastructure?
+- What is the request limit of your API endpoint?
+- How do you calculate the monthly costs for the this infrastructure?
 - Which anti-patterns do you see in this example project?
 
 ## What's next?
