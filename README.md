@@ -67,3 +67,66 @@ Questions:
 - What resources did we create and why?
 - How can you execute the Lambda function?
 - How can you see the log output from the Lambda function?
+
+## API Gateway
+
+In this section we want to create a simple HTTP API to invoke the Lambda function:
+
+1. Install the NPM package for API Gateway: `npm i @aws-cdk/aws-apigatewayv2 @aws-cdk/aws-apigatewayv2-integrations`
+1. Update `lib/cdk-hello-world-stack.ts`:
+
+   ```typescript
+   import * as cdk from "@aws-cdk/core";
+   import * as lambda from "@aws-cdk/aws-lambda-nodejs";
+   import * as apigateway from "@aws-cdk/aws-apigatewayv2";
+   import * as apigatewayIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
+
+   export class CdkHelloWorldStack extends cdk.Stack {
+     constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+       super(scope, id, props);
+
+       const putNote = new lambda.NodejsFunction(this, "PutNote", {
+         entry: "src/putNote.ts",
+         handler: "handler",
+       });
+
+       const putNoteIntegration = new apigatewayIntegrations.LambdaProxyIntegration(
+         {
+           handler: putNote,
+         }
+       );
+
+       const httpApi = new apigateway.HttpApi(this, "HttpApi");
+
+       httpApi.addRoutes({
+         path: "/notes",
+         methods: [apigateway.HttpMethod.POST],
+         integration: putNoteIntegration,
+       });
+
+       new cdk.CfnOutput(this, "URL", { value: httpApi.apiEndpoint });
+     }
+   }
+   ```
+
+1. Update the Lambda function, so `src/putNote.ts`:
+
+   ```typescript
+   export const handler = async () => {
+     console.log("Hello World :)");
+
+     return {
+       statusCode: 200,
+       body: JSON.stringify({ hello: "world" }),
+     };
+   };
+   ```
+
+1. Deploy: `npx cdk deploy`
+1. Copy the endpoint URL from the output of the deployment and run the following request: `curl -X POST https://XXXXX.execute-api.eu-central-1.amazonaws.com/notes`
+
+Questions:
+
+- What is a CloudFormation output and where do I find it?
+- How does the integration between API Gateway and Lambda work?
+- What happens if I try to access routes I didn't configure?
