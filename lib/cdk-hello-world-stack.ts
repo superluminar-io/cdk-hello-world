@@ -20,10 +20,23 @@ export class CdkHelloWorldStack extends cdk.Stack {
       }
     });
 
+    const listNotes = new lambda.NodejsFunction(this, 'ListNotes', {
+      entry: 'src/listNotes.ts',
+      handler: 'handler',
+      environment: {
+        TABLE_NAME: notesTable.tableName
+      }
+    });
+
     notesTable.grantReadWriteData(putNote);
+    notesTable.grantReadData(listNotes);
 
     const putNoteIntegration = new apigatewayIntegrations.LambdaProxyIntegration({
       handler: putNote,
+    });
+
+    const listNotesIntegration = new apigatewayIntegrations.LambdaProxyIntegration({
+      handler: listNotes,
     });
     
     const httpApi = new apigateway.HttpApi(this, 'HttpApi');
@@ -32,6 +45,12 @@ export class CdkHelloWorldStack extends cdk.Stack {
       path: '/notes',
       methods: [ apigateway.HttpMethod.POST ],
       integration: putNoteIntegration,
+    });
+
+    httpApi.addRoutes({
+      path: '/notes',
+      methods: [ apigateway.HttpMethod.GET ],
+      integration: listNotesIntegration,
     });
 
     new cdk.CfnOutput(this, 'URL', { value: httpApi.apiEndpoint });

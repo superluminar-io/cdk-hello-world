@@ -1,7 +1,7 @@
 import * as AWS from "aws-sdk";
 import { APIGatewayProxyEvent } from "aws-lambda";
 
-const DB = new AWS.DynamoDB()
+const DB = new AWS.DynamoDB.DocumentClient();
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   const body = JSON.parse(event.body || '{}');
@@ -12,17 +12,11 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     };
   }
 
-  await DB.putItem({
+  await DB.put({
     Item: {
-      id: {
-        S: new Date().toISOString()
-      },
-      title: {
-        S: body.title
-      },
-      content: {
-        S: body.content
-      },
+      id: new Date().toISOString(),
+      title: body.title,
+      content: body.content,
     },
     TableName: process.env.TABLE_NAME!
   }).promise();

@@ -189,7 +189,7 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
    import * as AWS from "aws-sdk";
    import { APIGatewayProxyEvent } from "aws-lambda";
 
-   const DB = new AWS.DynamoDB();
+   const DB = new AWS.DynamoDB.DocumentClient();
 
    export const handler = async (event: APIGatewayProxyEvent) => {
      const body = JSON.parse(event.body || "{}");
@@ -200,17 +200,11 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
        };
      }
 
-     await DB.putItem({
+     await DB.put({
        Item: {
-         id: {
-           S: new Date().toISOString(),
-         },
-         title: {
-           S: body.title,
-         },
-         content: {
-           S: body.content,
-         },
+         id: new Date().toISOString(),
+         title: body.title,
+         content: body.content,
        },
        TableName: process.env.TABLE_NAME!,
      }).promise();
@@ -221,6 +215,7 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
    };
    ```
 
+1. Deploy latest changes: `npx cdk deploy`
 1. Run with your endpoint url: `curl -X POST https://XXXXXX.execute-api.eu-central-1.amazonaws.com/notes --data '{ "title": "Hello World", "content": "abc" }' -H 'Content-Type: application/json' -i`
 1. Ideally, the first item should have been stored in the database.
 
@@ -229,3 +224,107 @@ Questions:
 - Where can I find the environment variables of the Lambda function in the AWS console?
 - What does the line `notesTable.grantReadWriteData(putNote)` do?
 - Why do we just define the partition key for the table, but not the whole schema with the fields `title` and `content`?
+
+### Fetch list of notes
+
+1. Extend the stack:
+
+   ```typescript
+   import * as cdk from "@aws-cdk/core";
+   import * as lambda from "@aws-cdk/aws-lambda-nodejs";
+   import * as apigateway from "@aws-cdk/aws-apigatewayv2";
+   import * as apigatewayIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
+   import * as dynamodb from "@aws-cdk/aws-dynamodb";
+
+   export class CdkHelloWorldStack extends cdk.Stack {
+     constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+       super(scope, id, props);
+
+       const notesTable = new dynamodb.Table(this, "NotesTable", {
+         partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+       });
+
+       const putNote = new lambda.NodejsFunction(this, "PutNote", {
+         entry: "src/putNote.ts",
+         handler: "handler",
+         environment: {
+           TABLE_NAME: notesTable.tableName,
+         },
+       });
+
+       const listNotes = new lambda.NodejsFunction(this, "ListNotes", {
+         entry: "src/listNotes.ts",
+         handler: "handler",
+         environment: {
+           TABLE_NAME: notesTable.tableName,
+         },
+       });
+
+       notesTable.grantReadWriteData(putNote);
+       notesTable.grantReadData(listNotes);
+
+       const putNoteIntegration = new apigatewayIntegrations.LambdaProxyIntegration(
+         {
+           handler: putNote,
+         }
+       );
+
+       const listNotesIntegration = new apigatewayIntegrations.LambdaProxyIntegration(
+         {
+           handler: listNotes,
+         }
+       );
+
+       const httpApi = new apigateway.HttpApi(this, "HttpApi");
+
+       httpApi.addRoutes({
+         path: "/notes",
+         methods: [apigateway.HttpMethod.POST],
+         integration: putNoteIntegration,
+       });
+
+       httpApi.addRoutes({
+         path: "/notes",
+         methods: [apigateway.HttpMethod.GET],
+         integration: listNotesIntegration,
+       });
+
+       new cdk.CfnOutput(this, "URL", { value: httpApi.apiEndpoint });
+     }
+   }
+   ```
+
+1. Create a new file: `touch src/listNotes.ts`:
+
+   ```typescript
+   import * as AWS from "aws-sdk";
+
+   const DB = new AWS.DynamoDB.DocumentClient();
+
+   export const handler = async () => {
+     const response = await DB.scan({
+       TableName: process.env.TABLE_NAME!,
+     }).promise();
+
+     return {
+       statusCode: 200,
+       body: JSON.stringify(response.Items),
+     };
+   };
+   ```
+
+1. Deploy: `npx cdk deploy`
+1. Run the following request with your endpoint URL: `curl https://XXXXXX.execute-api.eu-central-1.amazonaws.com/notes`
+
+## What's next?
+
+This is a list of ideas to extend the hello world example project:
+
+- Add more routes
+  - Get a note by id
+  - Delete a note by id
+  - Update a note by id
+- Add pagination to the list of notes
+- Add a DynamoDB Stream to process new items (e.g. count the words of the content and persist it in a new field of the item)
+- Break the system and understand how to debug problems (e.g. What if we forget to pass the table name to the Lambda function?)
+- Write unit tests for the Lambda functions
