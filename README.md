@@ -24,7 +24,7 @@ Let's get started by creating a completely new CDK stack.
 
 1. Deploy stack: `npx cdk deploy`
 
-Questions:
+**Questions:**
 
 - Why did we add a prefix or suffix to the stack?
 - What did we actually deploy?
@@ -62,7 +62,7 @@ Cool, we have a CDK stack now. Next step is our first Lambda function:
 
 1. Deploy the latest changes: `npx cdk deploy`
 
-Questions:
+**Questions:**
 
 - What resources did we create and why?
 - How can you execute the Lambda function?
@@ -125,7 +125,7 @@ In this section we want to create a simple HTTP API to invoke the Lambda functio
 1. Deploy: `npx cdk deploy`
 1. Copy the endpoint URL from the output of the deployment and run the following request: `curl -X POST https://XXXXX.execute-api.eu-central-1.amazonaws.com/notes`
 
-Questions:
+**Questions:**
 
 - What is a CloudFormation output and where do I find it?
 - How does the integration between API Gateway and Lambda work?
@@ -219,7 +219,7 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
 1. Run with your endpoint url: `curl -X POST https://XXXXXX.execute-api.eu-central-1.amazonaws.com/notes --data '{ "title": "Hello World", "content": "abc" }' -H 'Content-Type: application/json' -i`
 1. Ideally, the first item should have been stored in the database.
 
-Questions:
+**Questions:**
 
 - Where can I find the environment variables of the Lambda function in the AWS console?
 - What does the line `notesTable.grantReadWriteData(putNote)` do?
