@@ -1,5 +1,9 @@
 # cdk-hello-world
 
+## Architecture Diagram
+
+![architecture diagram](./docs/architecture.png)
+
 ## Step-by-step guide
 
 ### Bootstrap
