@@ -436,6 +436,69 @@ In this section we are going to add some unit tests for the Lambda functions.
 
 1. Run the tests: `npm test`
 
+## Integration tests
+
+1. Install some dependencies: `npm i node-fetch @types/node-fetch --save-dev`
+1. Create a new folder: `mkdir integration`
+1. Create a new file: `touch integration/api.test.ts`:
+
+   ```typescript
+   import fetch from "node-fetch";
+
+   const endpoint = process.env.ENDPOINT;
+
+   test("create a note", async () => {
+     const response = await fetch(`${endpoint}/notes`, {
+       method: "POST",
+       body: JSON.stringify({
+         title: "Hello World",
+         content: "Ex nisi do ad sint enim.",
+       }),
+     });
+
+     expect(response.status).toEqual(201);
+   });
+
+   test("list notes", async () => {
+     const response = await fetch(`${endpoint}/notes`);
+
+     expect(response.status).toEqual(200);
+   });
+   ```
+
+1. Create a new jest config file:
+
+   ```typescript
+   module.exports = {
+     roots: ["<rootDir>/integration"],
+     testMatch: ["**/*.test.ts"],
+     transform: {
+       "^.+\\.tsx?$": "ts-jest",
+     },
+   };
+   ```
+
+1. Add this line to `.gitignore`:
+   ```
+   !jest.integration.config.js
+   ```
+1. Add a new script for integration tests to the `package.json`:
+   ```typescript
+   "scripts": {
+       "build": "tsc",
+       "watch": "tsc -w",
+       "test": "jest",
+       "cdk": "cdk",
+       "integration": "jest -c jest.integration.config.js"
+   },
+   ```
+1. Run the integration tests: `ENDPOINT=https://XXXXXX.execute-api.eu-central-1.amazonaws.com npm run integration`
+
+**Questions:**
+
+- How could you improve the integration tests to further check the integrity of the API?
+- How could you use the integration tests?
+
 ## Further questions
 
 - What is the request limit of our API?
