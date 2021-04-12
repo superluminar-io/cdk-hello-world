@@ -2,7 +2,7 @@
 
 ## Step-by-step guide
 
-## Bootstrap
+### Bootstrap
 
 Let's get started by creating a completely new CDK stack.
 
@@ -29,7 +29,7 @@ Questions:
 - Why did we add a prefix or suffix to the stack?
 - What did we actually deploy?
 
-## The first lambda function
+### The first lambda function
 
 Cool, we have a CDK stack now. Next step is our first Lambda function:
 
@@ -68,7 +68,7 @@ Questions:
 - How can you execute the Lambda function?
 - How can you see the log output from the Lambda function?
 
-## API Gateway
+### API Gateway
 
 In this section we want to create a simple HTTP API to invoke the Lambda function:
 
