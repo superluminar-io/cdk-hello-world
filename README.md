@@ -4,7 +4,7 @@
 
 ![architecture diagram](./docs/architecture.png)
 
-## Step-by-step guide
+## Step-by-Step Guide
 
 ### Bootstrap
 
@@ -166,7 +166,7 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
          },
        });
 
-       notesTable.grantReadWriteData(putNote);
+       notesTable.grant(putNote, "dynamodb:PutItem");
 
        const putNoteIntegration = new apigatewayIntegrations.LambdaProxyIntegration(
          {
@@ -228,6 +228,7 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
 - Where can I find the environment variables of the Lambda function in the AWS console?
 - What does the line `notesTable.grantReadWriteData(putNote)` do?
 - Why do we just define the partition key for the table, but not the whole schema with the fields `title` and `content`?
+- What is the maximum size of a note's content?
 
 ### Fetch list of notes
 
@@ -264,8 +265,8 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
          },
        });
 
-       notesTable.grantReadWriteData(putNote);
-       notesTable.grantReadData(listNotes);
+       notesTable.grant(putNote, "dynamodb:PutItem");
+       notesTable.grant(listNotes, "dynamodb:Scan");
 
        const putNoteIntegration = new apigatewayIntegrations.LambdaProxyIntegration(
          {
@@ -320,6 +321,17 @@ We have an API and a lambda function. Pretty cool, now let's create a database a
 1. Deploy: `npx cdk deploy`
 1. Run the following request with your endpoint URL: `curl https://XXXXXX.execute-api.eu-central-1.amazonaws.com/notes`
 
+**Questions:**
+
+- How many notes are returned in the worst case?
+- Why shouldn't we use scan operations here?
+
+## Further questions
+
+- What is the request limit of our API?
+- What are the costs per month for the provisioned infrastructure?
+- Which anti-patterns do you see in this example project?
+
 ## What's next?
 
 This is a list of ideas to extend the hello world example project:
@@ -332,3 +344,9 @@ This is a list of ideas to extend the hello world example project:
 - Add a DynamoDB Stream to process new items (e.g. count the words of the content and persist it in a new field of the item)
 - Break the system and understand how to debug problems (e.g. What if we forget to pass the table name to the Lambda function?)
 - Write unit tests for the Lambda functions
+- Implement deployment strategies
+- CI / CD Pipeline
+
+## Links
+
+- https://github.com/rakyll/hey

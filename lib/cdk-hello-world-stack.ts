@@ -28,8 +28,8 @@ export class CdkHelloWorldStack extends cdk.Stack {
       }
     });
 
-    notesTable.grantReadWriteData(putNote);
-    notesTable.grantReadData(listNotes);
+    notesTable.grant(putNote, "dynamodb:PutItem");
+    notesTable.grant(listNotes, "dynamodb:Scan");
 
     const putNoteIntegration = new apigatewayIntegrations.LambdaProxyIntegration({
       handler: putNote,
