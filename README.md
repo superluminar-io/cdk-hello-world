@@ -130,3 +130,102 @@ Questions:
 - What is a CloudFormation output and where do I find it?
 - How does the integration between API Gateway and Lambda work?
 - What happens if I try to access routes I didn't configure?
+
+### DynamoDB
+
+We have an API and a lambda function. Pretty cool, now let's create a database and persist something:
+
+1. As always, new dependencies: `npm i @aws-cdk/aws-dynamodb`
+1. Plus more dependencies for our local setup: `npm i --save-dev aws-sdk @types/aws-lambda`
+1. Extend our stack:
+
+   ```typescript
+   import * as cdk from "@aws-cdk/core";
+   import * as lambda from "@aws-cdk/aws-lambda-nodejs";
+   import * as apigateway from "@aws-cdk/aws-apigatewayv2";
+   import * as apigatewayIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
+   import * as dynamodb from "@aws-cdk/aws-dynamodb";
+
+   export class CdkHelloWorldStack extends cdk.Stack {
+     constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+       super(scope, id, props);
+
+       const notesTable = new dynamodb.Table(this, "NotesTable", {
+         partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+       });
+
+       const putNote = new lambda.NodejsFunction(this, "PutNote", {
+         entry: "src/putNote.ts",
+         handler: "handler",
+         environment: {
+           TABLE_NAME: notesTable.tableName,
+         },
+       });
+
+       notesTable.grantReadWriteData(putNote);
+
+       const putNoteIntegration = new apigatewayIntegrations.LambdaProxyIntegration(
+         {
+           handler: putNote,
+         }
+       );
+
+       const httpApi = new apigateway.HttpApi(this, "HttpApi");
+
+       httpApi.addRoutes({
+         path: "/notes",
+         methods: [apigateway.HttpMethod.POST],
+         integration: putNoteIntegration,
+       });
+
+       new cdk.CfnOutput(this, "URL", { value: httpApi.apiEndpoint });
+     }
+   }
+   ```
+
+1. Update the lambda function:
+
+   ```typescript
+   import * as AWS from "aws-sdk";
+   import { APIGatewayProxyEvent } from "aws-lambda";
+
+   const DB = new AWS.DynamoDB();
+
+   export const handler = async (event: APIGatewayProxyEvent) => {
+     const body = JSON.parse(event.body || "{}");
+
+     if (!body.title || !body.content) {
+       return {
+         statusCode: 400,
+       };
+     }
+
+     await DB.putItem({
+       Item: {
+         id: {
+           S: new Date().toISOString(),
+         },
+         title: {
+           S: body.title,
+         },
+         content: {
+           S: body.content,
+         },
+       },
+       TableName: process.env.TABLE_NAME!,
+     }).promise();
+
+     return {
+       statusCode: 201,
+     };
+   };
+   ```
+
+1. Run with your endpoint url: `curl -X POST https://XXXXXX.execute-api.eu-central-1.amazonaws.com/notes --data '{ "title": "Hello World", "content": "abc" }' -H 'Content-Type: application/json' -i`
+1. Ideally, the first item should have been stored in the database.
+
+Questions:
+
+- Where can I find the environment variables of the Lambda function in the AWS console?
+- What does the line `notesTable.grantReadWriteData(putNote)` do?
+- Why do we just define the partition key for the table, but not the whole schema with the fields `title` and `content`?
