@@ -529,13 +529,13 @@ In this section we are going to add some unit tests for the Lambda functions.
          },
        });
 
-       const version1Alias = new lambda.Alias(this, "alias", {
+       const versionAlias = new lambda.Alias(this, "alias", {
          aliasName: "prod",
          version: putNote.currentVersion,
        });
 
        new codedeploy.LambdaDeploymentGroup(this, "BlueGreenDeployment", {
-         alias: version1Alias,
+         alias: versionAlias,
          deploymentConfig:
            codedeploy.LambdaDeploymentConfig.CANARY_10PERCENT_5MINUTES,
        });

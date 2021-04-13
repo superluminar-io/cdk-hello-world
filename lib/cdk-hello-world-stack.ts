@@ -22,13 +22,13 @@ export class CdkHelloWorldStack extends cdk.Stack {
       }
     });
 
-    const version1Alias = new lambda.Alias(this, 'alias', {
+    const versionAlias = new lambda.Alias(this, 'alias', {
       aliasName: 'prod',
       version: putNote.currentVersion
     });
 
     new codedeploy.LambdaDeploymentGroup(this, 'BlueGreenDeployment', {
-      alias: version1Alias,
+      alias: versionAlias,
       deploymentConfig: codedeploy.LambdaDeploymentConfig.CANARY_10PERCENT_5MINUTES,
     });
 
