@@ -45,3 +45,8 @@ After granting CodePipeline access to your GitHub repositories, select the neede
 ## Run your CodePipeline
 
 ![AWS CodePipeline](./code-pipeline-11.png)
+
+## Next Steps
+
+* Create a CodePipeline stage to run unit tests
+* Create a CodePipeline stage to deploy your CDK application
