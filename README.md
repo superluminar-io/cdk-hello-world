@@ -23,7 +23,9 @@ Start with creating a completely new CDK stack:
    import { CdkHelloWorldStack } from "../lib/cdk-hello-world-stack";
 
    const app = new cdk.App();
-   new CdkHelloWorldStack(app, "CdkHelloWorldStack-Henrik");
+   new CdkHelloWorldStack(app, "CdkHelloWorldStack", {
+     stackName: 'my-stack-name-henrik'
+   });
    ```
 
 1. Deploy the CloudFormation stack: `npx cdk deploy`
