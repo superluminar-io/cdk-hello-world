@@ -6,12 +6,17 @@ import * as apigatewayIntegrations from '@aws-cdk/aws-apigatewayv2-integrations'
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as codedeploy from '@aws-cdk/aws-codedeploy';
 
+export interface CdkHelloWorldProps extends cdk.StackProps {
+  environmentName: 'production' | 'development'
+}
+
 export class CdkHelloWorldStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: cdk.Construct, id: string, props: CdkHelloWorldProps) {
     super(scope, id, props);
 
     const notesTable = new dynamodb.Table(this, 'NotesTable', {
-      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING }
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      removalPolicy: props.environmentName === 'production' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY
     })
 
     const putNote = new lambdaNode.NodejsFunction(this, 'PutNote', {
