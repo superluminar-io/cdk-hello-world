@@ -613,3 +613,4 @@ This is a list of ideas to extend the hello world example project:
 ## Links
 
 - https://github.com/rakyll/hey
+- https://iam.cloudonaut.io/reference/dynamodb.html
