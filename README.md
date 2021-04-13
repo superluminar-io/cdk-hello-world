@@ -499,6 +499,97 @@ In this section we are going to add some unit tests for the Lambda functions.
 - How could you improve the integration tests to further check the integrity of the API?
 - How could you use the integration tests?
 
+## Canary Deployments
+
+1. Install new dependencies: `npm i @aws-cdk/aws-lambda @aws-cdk/aws-codedeploy`
+1. Extend the CloudFormation stack:
+
+   ```typescript
+   import * as cdk from "@aws-cdk/core";
+   import * as lambda from "@aws-cdk/aws-lambda";
+   import * as lambdaNode from "@aws-cdk/aws-lambda-nodejs";
+   import * as apigateway from "@aws-cdk/aws-apigatewayv2";
+   import * as apigatewayIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
+   import * as dynamodb from "@aws-cdk/aws-dynamodb";
+   import * as codedeploy from "@aws-cdk/aws-codedeploy";
+
+   export class CdkHelloWorldStack extends cdk.Stack {
+     constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+       super(scope, id, props);
+
+       const notesTable = new dynamodb.Table(this, "NotesTable", {
+         partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+       });
+
+       const putNote = new lambdaNode.NodejsFunction(this, "PutNote", {
+         entry: "src/putNote.ts",
+         handler: "handler",
+         environment: {
+           TABLE_NAME: notesTable.tableName,
+         },
+       });
+
+       const version1Alias = new lambda.Alias(this, "alias", {
+         aliasName: "prod",
+         version: putNote.currentVersion,
+       });
+
+       new codedeploy.LambdaDeploymentGroup(this, "BlueGreenDeployment", {
+         alias: version1Alias,
+         deploymentConfig:
+           codedeploy.LambdaDeploymentConfig.CANARY_10PERCENT_5MINUTES,
+       });
+
+       const listNotes = new lambdaNode.NodejsFunction(this, "ListNotes", {
+         entry: "src/listNotes.ts",
+         handler: "handler",
+         environment: {
+           TABLE_NAME: notesTable.tableName,
+         },
+       });
+
+       notesTable.grant(putNote, "dynamodb:PutItem");
+       notesTable.grant(listNotes, "dynamodb:Scan");
+
+       const putNoteIntegration = new apigatewayIntegrations.LambdaProxyIntegration(
+         {
+           handler: putNote,
+         }
+       );
+
+       const listNotesIntegration = new apigatewayIntegrations.LambdaProxyIntegration(
+         {
+           handler: listNotes,
+         }
+       );
+
+       const httpApi = new apigateway.HttpApi(this, "HttpApi");
+
+       httpApi.addRoutes({
+         path: "/notes",
+         methods: [apigateway.HttpMethod.POST],
+         integration: putNoteIntegration,
+       });
+
+       httpApi.addRoutes({
+         path: "/notes",
+         methods: [apigateway.HttpMethod.GET],
+         integration: listNotesIntegration,
+       });
+
+       new cdk.CfnOutput(this, "URL", { value: httpApi.apiEndpoint });
+     }
+   }
+   ```
+
+1. Deploy the CloudFormation stack: `npx cdk deploy`
+1. Update the `putNote` lambda function and deploy the stack again.
+
+**Questions:**
+
+- How does the CloudFormation stack behave after the update?
+- Can you break the system so a rollback gets triggered?
+
 ## Further questions
 
 - What is the request limit of our API?

@@ -1,8 +1,10 @@
 import * as cdk from '@aws-cdk/core';
-import * as lambda from '@aws-cdk/aws-lambda-nodejs';
+import * as lambda from '@aws-cdk/aws-lambda';
+import * as lambdaNode from '@aws-cdk/aws-lambda-nodejs';
 import * as apigateway from '@aws-cdk/aws-apigatewayv2';
 import * as apigatewayIntegrations from '@aws-cdk/aws-apigatewayv2-integrations';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
+import * as codedeploy from '@aws-cdk/aws-codedeploy';
 
 export class CdkHelloWorldStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -12,7 +14,7 @@ export class CdkHelloWorldStack extends cdk.Stack {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING }
     })
 
-    const putNote = new lambda.NodejsFunction(this, 'PutNote', {
+    const putNote = new lambdaNode.NodejsFunction(this, 'PutNote', {
       entry: 'src/putNote.ts',
       handler: 'handler',
       environment: {
@@ -20,7 +22,17 @@ export class CdkHelloWorldStack extends cdk.Stack {
       }
     });
 
-    const listNotes = new lambda.NodejsFunction(this, 'ListNotes', {
+    const version1Alias = new lambda.Alias(this, 'alias', {
+      aliasName: 'prod',
+      version: putNote.currentVersion
+    });
+
+    new codedeploy.LambdaDeploymentGroup(this, 'BlueGreenDeployment', {
+      alias: version1Alias,
+      deploymentConfig: codedeploy.LambdaDeploymentConfig.CANARY_10PERCENT_5MINUTES,
+    });
+
+    const listNotes = new lambdaNode.NodejsFunction(this, 'ListNotes', {
       entry: 'src/listNotes.ts',
       handler: 'handler',
       environment: {
