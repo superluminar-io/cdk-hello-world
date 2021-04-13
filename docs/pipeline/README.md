@@ -16,6 +16,8 @@ CodePipeline can access your GitHub repository after doing the initial _OAuth-Ha
 
 After granting CodePipeline access to your GitHub repositories, select the needed repository and configure the desired branch.
 
+![AWS CodePipeline](./code-pipeline-03-select.png)
+
 ## Use CodeBuild to build the project
 
 ![AWS CodePipeline](./code-pipeline-04.png)
