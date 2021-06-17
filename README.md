@@ -64,6 +64,7 @@ Cool, we have a CDK stack now. The next step contains our first Lambda function:
    }
    ```
 
+1. Create the basic resources (e.g. S3 bucket etc.) : `npx cdk bootstrap --region eu-central-1`
 1. Deploy the latest changes: `npx cdk deploy`
 
 **Questions:**
