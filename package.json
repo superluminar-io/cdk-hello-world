@@ -44,7 +44,7 @@
     "@aws-cdk/aws-lambda": "^1.98.0",
     "@aws-cdk/aws-lambda-nodejs": "^1.98.0",
     "@aws-cdk/core": "^1.98.0",
-    "esbuild": "^0.11.9",
+    "esbuild": "^0.14.3",
     "source-map-support": "^0.5.16"
   }
 }
