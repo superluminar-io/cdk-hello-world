@@ -29,7 +29,7 @@
     "@types/node": "10.17.27",
     "@types/node-fetch": "^2.5.10",
     "aws-cdk": "^1.98.0",
-    "aws-sdk": "^2.885.0",
+    "aws-sdk": "^2.1057.0",
     "jest": "^26.4.2",
     "node-fetch": "^2.6.1",
     "ts-jest": "^26.2.0",
